@@ -48,7 +48,57 @@ class BTree {
          * Also, delete in student.csv after deleting in B+Tree, if it exists.
          * Return true if the student is deleted successfully otherwise, return false.
          */
+        if (root == null) {
+          return false;
+        }
+        
+        if (root.leaf == true) {
+          return deleteFromNode(root, studentId);
+        }
+        
         return true;
+    }
+    
+    private boolean deleteFromNode(BTreeNode node, long key) {
+      int index = -1;
+      
+      // Find the key in the key array
+      for (int i = 0; i < node.keys.length; i++) {
+        if (node.keys[i] == key) {
+          index = i;
+          break;
+        }
+      }
+      
+      // Key not found
+      if (index == -1) {
+        return false;
+      }
+      
+      // Key found - remove it from the array
+      for (int k = index; k < node.keys.length; k++) {
+        if (node.keys[k] == node.keys.length) {
+          node.keys[k] = 0;
+        } else {
+          node.keys[k] = node.keys[k + 1];
+        }
+      }
+      
+      // Return if this isn't a leaf
+      if (!node.leaf) {
+        return true;
+      }
+      
+      // Remove the same index from the values in the leaf
+      for (int k = index; k < node.values.length; k++) {
+        if (node.values[k] == node.values.length) {
+          node.values[k] = 0;
+        } else {
+          node.values[k] = node.values[k + 1];
+        }
+      }
+      
+      return true;
     }
 
     List<Long> print() {

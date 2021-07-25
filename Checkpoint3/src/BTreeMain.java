@@ -3,6 +3,7 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.UUID;
 
 /**
  * Main Application.
@@ -31,7 +32,7 @@ public class BTreeMain {
         for (Student s : studentsDB) {
             bTree.insert(s);
         }
-
+        long size = (long) studentsDB.size();
         /** Start reading the operations now from input file*/
         try {
             while (scan.hasNextLine()) {
@@ -51,6 +52,7 @@ public class BTreeMain {
                             int age = Integer.parseInt(s2.next());
                             /** TODO: Write a logic to generate recordID*/
                             //long recordID = ;
+                            long recordID = ++size;
 
                            // Student s = new Student(studentId, age, studentName, major, level, recordID);
                             //bTree.insert(s);
@@ -98,8 +100,25 @@ public class BTreeMain {
          * Extract the students information from "Students.csv"
          * return the list<Students>
          */
-
+    	
         List<Student> studentList = new ArrayList<>();
+        Scanner readStudents=null;
+        try {
+			readStudents = new Scanner(new File("src/Student.csv"));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			System.out.println("Student file not found.");
+		}
+		while(readStudents.hasNextLine()) {
+			String[] studentLine = readStudents.nextLine().split(",");
+			long studentId= Long.parseLong(studentLine[0]);
+			int age = Integer.parseInt(studentLine[4]);
+			long recordId = Long.parseLong(studentLine[5]);
+        	Student newStudent = new Student(studentId,age,studentLine[1],studentLine[2],studentLine[3],recordId);
+        	studentList.add(newStudent);
+		}
+        
+        
         return studentList;
     }
 }

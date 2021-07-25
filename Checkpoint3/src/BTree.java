@@ -38,10 +38,60 @@ class BTree {
          * Implement this function to insert in the B+Tree.
          * Also, insert in student.csv after inserting in B+Tree.
          */
-    	BTreeNode x = root;
-    	BTreeNode newNode = null;
+    	
+    	// Tree needs created
+    	if(this.root==null) {
+    		// create a new B Tree Node for the root
+    		BTreeNode newNode = new BTreeNode(this.t,true);
+    		this.root=newNode;
+    		root.keys[0]=student.studentId;
+    		root.values[0]=student.recordId;
+    		root.n++;
+    		return this; // insertion is complete for this student.
+    	}
+    	// Tree has been is created already
+    	// No children
+    	if(this.root.leaf == true) {
+    		if (this.root.n < (this.root.keys.length)) { //there is room in the root
+	    		root.keys[root.n]=student.studentId;
+	    		root.values[root.n]=student.recordId;
+	    		
+	    		// Need to check that keys are in sorted order & make changes to values if needed
+	    		boolean sorted = false;
+	    		int i=0;
+	    		while(!sorted) {
+	    			if(root.keys[i] > root.keys[root.n]) { // need to change the order
+	    				long tempKey = root.keys[i];
+	    				long tempVal = root.values[i];
+	    				root.keys[i]=root.keys[root.n]; // move the new key to where it should be
+	    				root.values[i]=root.values[root.n];
+	    				for(int j=i+1; j<=root.n ; j++) { // move all other elements to be in order
+	    					long nextTempKey = root.keys[j];
+	    					long nextTempVal = root.values[j];
+	    					root.keys[j]=tempKey;
+	    					root.values[j]=tempVal;
+	    					tempKey=nextTempKey;
+	    					tempVal=nextTempVal;
+	    				}
+	    				sorted=true;
+	    			}
+	    			i++;
+	    			if(i > root.n) {
+	    				sorted = true;
+	    			}
+	    		}
+	    		root.n++;
+	    		return this; // insertion to the root is complete.
+    		} else { // no room in the root
+    			// NEED TO DO: split the root node
+    		}
+    	}
+    	
+    	//BTreeNode x = root;
+    	//BTreeNode newNode = null;
     	
     	//if root is empty, create a leaf node with key from student and make that node the root
+    	/* causing null pointer exception
     	if (x == null) {
     		newNode.keys[0] = student.studentId;
     		newNode.values[0] = student.recordId;
@@ -50,6 +100,8 @@ class BTree {
     		newNode.children = null;
     		this.root = newNode;
     	}
+    	*/
+    	 
     	//if the root exists, check to see if it has children. If not, check to see if there is space to store another value. If no space, split
     	else if (this.root.children != null) {
     		if (this.root.keys.length < t-1) {//checks to see if root is full. If not, add new value to root

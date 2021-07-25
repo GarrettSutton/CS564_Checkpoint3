@@ -29,7 +29,43 @@ class BTree {
          * Return recordID for the given StudentID.
          * Otherwise, print out a message that the given studentId has not been found in the table and return -1.
          */
+      if (root == null) {
         return -1;
+      }
+      
+      return searchHelper(root, studentId);
+    }
+      
+    long searchHelper(BTreeNode current, long key) {
+      // If the current node is a leaf, search the keys
+      // If found, return the value at the same index where the key was found
+      if (current.leaf) {
+        for (int i = 0; i < current.keys.length; i++) {
+          if (key == current.keys[i]) {
+            return current.values[i];
+          }
+        }
+        
+        // Key was not found
+        return -1;
+        
+      } else { // Find the right child to visit
+        int childIndex = -1;
+        for (int j = 0; j < current.keys.length; j++) {
+          if ((key < current.keys[j]) || (current.keys[j] == 0)) {
+            childIndex = j;
+            break; // Stop looping once we found the right child
+          }
+        }
+        
+        // If the student key is greater than all in current, visit the last child
+        if (childIndex == -1) {
+          childIndex = current.children.length - 1;
+        }
+        
+        // Visit the child node
+        return searchHelper(current.children[childIndex], key);
+      }
     }
 
     BTree insert(Student student) {
@@ -569,6 +605,28 @@ class BTree {
          * Return a list of recordIDs from left to right of leaf nodes.
          *
          */
+        BTreeNode current = root;
+        
+        if (root == null) {
+          return listOfRecordID;
+        }
+        
+        // Starting from the root, traverse the tree using the left-most child of each non-leaf node
+        while (current != null && !current.leaf) {
+          current = current.children[0];
+        }
+        
+        // Current is now the left-most leaf node
+        // For each leaf, pull the record IDs from the values array
+        while (current != null) {
+          for (int i = 0; i < current.keys.length; i++) {
+            if (current.keys[i] != 0) {
+              listOfRecordID.add(current.values[i]);
+            }
+          }
+          current = current.next;
+        }
+        
         return listOfRecordID;
     }
 }

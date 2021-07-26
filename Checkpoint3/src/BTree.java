@@ -178,6 +178,7 @@ class BTree {
         
         //visitChild(current,student);
       }
+      // check current after the copy up from splitting
       
     }
     
@@ -188,14 +189,14 @@ class BTree {
 
       // Create the new node
       BTreeNode newNode = new BTreeNode(this.t, isLeaf);
-      
+      //isLeaf = child.leaf;
       // Call the right method based on leaf status
       if (isLeaf) {
         splitLeaf(child, parent, student, newNode, index);
       } else {
         splitNonLeaf(child, parent, newNode, index);
       }
-      
+
       return;
     }
       
@@ -216,10 +217,11 @@ class BTree {
       
       //TODO Update list of children on parent
       // This needs to be updated to temporarily expand the children array if full
+      boolean changedSize = false;
       if(parent.children[parent.children.length-1] != null) { // children array is full 
-    	  System.out.println("children are full");
     	  int newSize = (parent.children.length);
     	  parent.children= Arrays.copyOf(parent.children, newSize+1);
+    	  changedSize = true;
       }
       
       for (int i = parent.children.length - 1; i > index; i--) {
@@ -229,8 +231,9 @@ class BTree {
       
       // Copy up middle key - expand parent's keys array if needed, add new key in the right spot
       boolean expand = false;
-      if (parent.n == parent.keys.length) {
-        expand = true;
+      //if (parent.n == parent.keys.length) {
+      if(changedSize) {  
+      	expand = true;
       }
       
       parent = addKeyValToNode(parent, newNode.keys[0], newNode.values[0], expand);

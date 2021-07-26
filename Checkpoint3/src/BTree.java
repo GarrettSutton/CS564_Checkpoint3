@@ -88,16 +88,19 @@ class BTree {
     		  BTreeNode leftChild = new BTreeNode(this.t, true);
     		  BTreeNode rightChild = new BTreeNode(this.t, true);
     		  
-    		  // Split keys between new nodes
-    		  long[] combinedKeys = addKeyToArray(root.keys, student.studentId, true);
-              splitKeysBetweenNodes(combinedKeys, leftChild, rightChild);
+    		  // Split keys and values between new nodes
+              BTreeNode updatedNode = addKeyValToNode(root,student.studentId,student.recordId,true);
+              long[] oversizedKeyArray = updatedNode.keys;
+    		  splitKeyValsBetweenNodes(updatedNode, leftChild, rightChild);
               root.keys = new long[2 * t - 1]; // get fresh array for root
-              root.keys[0] = combinedKeys[combinedKeys.length / 2]; // copy up middle key
+              root.keys[0] = oversizedKeyArray[oversizedKeyArray.length / 2]; // copy up middle key
               root.n = 1;
     		  
-    		  // TODO Split values between new nodes
-
-    		  
+    		  // TODO Split values between new nodes: DONE addKeyValToNode & splitKeyValBetweenNodes
+              
+              // Make the right child to sibling of the left child
+              leftChild.next = rightChild;
+              
     		  // Update children on root
     		  root.children[0] = leftChild;
     		  root.children[1] = rightChild;
@@ -110,69 +113,18 @@ class BTree {
     		  
     		}
     	}
-    	
-    	//BTreeNode x = root;
-    	//BTreeNode newNode = null;
-    	
-    	//if root is empty, create a leaf node with key from student and make that node the root
-    	/* causing null pointer exception
-    	if (x == null) {
-    		newNode.keys[0] = student.studentId;
-    		newNode.values[0] = student.recordId;
-    		newNode.n++;
-    		newNode.leaf = true;
-    		newNode.children = null;
-    		this.root = newNode;
-    	}
-    	*/
-    	
     	// root is not a leaf, need to traverse tree
     	else {
     	  visitChild(root, student);
     	  // TODO need to handle splitting the root if we pushed a key into it and it's too big
+    	  if(root.keys.length > (2* t -1)) {
+    		  // Create new root node
+    		  BTreeNode newRoot = new BTreeNode(this.t,false);
+    		  split(root,newRoot,student,false,1);
+    		  this.root=newRoot;
+    	  }
     	}
     	
-    	
-    	
-    	// Original code
-    	//if the root exists, check to see if it has children. If not, check to see if there is space to store another value. If no space, split
-//    	else if (this.root.children != null) {
-//    		if (this.root.keys.length < t-1) {//checks to see if root is full. If not, add new value to root
-//    			this.root.keys[this.root.keys.length] = student.studentId;
-//    			Arrays.sort(this.root.keys);
-//    			//this.root.n++; not sure if we need this
-//    			this.root.values[this.root.keys.length] = student.recordId; 
-//    		}
-//    		else {//root will be full after adding, will need to split
-//    			this.root.keys[this.root.keys.length] = student.studentId;
-//    			this.root.n++;
-//    			this.root.values[this.root.keys.length] = student.recordId; 
-//    			split(root);
-//    		}
-//    	}
-//    	//root exists and has children, search for where to insert the new values
-//    	else {
-//    		BTreeNode current = this.root;
-//    		while (current.children != null)  {//continue through nodes until we find the correct leaf    			
-//    			for (int i = 0; i < current.keys.length; i++) { //go through values in node
-//    				if (current.keys[i] < student.studentId) {}
-//    				else {
-//    					current = current.children[i];
-//    				}
-//    			}
-//    		}//while loop	
-//    		if (current.keys.length == t) { //the leaf node does not have enough space, add the key and split
-//    			current.keys[current.keys.length] = student.studentId;
-//    			Arrays.sort(current.keys);
-//    			current.values[this.root.keys.length] = student.recordId;
-//    			split(current);
-//    		}
-//    		else { // leaf node has enough space, add key and sort
-//    			current.keys[current.keys.length] = student.studentId;
-//    			Arrays.sort(current.keys);
-//    			current.values[this.root.keys.length] = student.recordId;
-//    		}
-//    	}
         return this;
     }
     
@@ -186,9 +138,10 @@ class BTree {
      * @param student
      */
     private void visitChild(BTreeNode current, Student student) {
-
+      
       int childIndex = -1;
       long key = student.studentId;
+      long value = student.recordId;
       
       // Find the right child to visit
       for (int i = 0; i < current.keys.length; i++) {
@@ -212,12 +165,9 @@ class BTree {
           // TODO Split
           split(child, current, student, true, childIndex + 1);
         } else { // Add key/value to child
-//          child.keys[child.keys.length] = student.studentId;
-//          Arrays.sort(child.keys);
-//          child.values[child.keys.length] = student.recordId;
-          child.keys = addKeyToArray(child.keys, student.studentId, false);
+          child = addKeyValToNode(child, key, value,false);
           child.n++;
-          // TODO insert value in right position in values array
+          // TODO insert value in right position in values array: DONE via addKeyValToNode
         }
       } else { // Child is not a leaf
         visitChild(child, student);
@@ -225,42 +175,12 @@ class BTree {
         if (child.keys.length > (2 * t - 1)) {
           split(child, current, student, false, childIndex + 1);
         }
+        
+        //visitChild(current,student);
       }
       
     }
     
-    /*
-     * helper method for insert. Splits both Root and leaf nodes
-     * if leaf does not have space to insert in node, split into 2 nodes, redistribute keys, copy up middle key, add pointer to new node 
-     * if non-leaf does not have space, split into 2 nodes, redistribute keys, move up middle key
-     */
-//    private void split(BTreeNode node) {
-//    	BTreeNode parentNode = node;
-//    	BTreeNode originalNode = node;
-//    	BTreeNode newNode = null;
-//    	long midKey = originalNode.keys[t/2];
-//    	int a = 0;
-//    	
-//    	//Split for non-leaf node
-//    	if (node.children != null) {    
-//        	for (int i = t/2; i < originalNode.keys.length; i++) {
-//        		newNode.keys[a] = originalNode.keys[i];
-//       			a++;
-//       		}
-//    	}
-//    	//split for leaf node
-//    	else { 
-//    		for (int i = t/2; i < originalNode.keys.length; i++) {
-//    			newNode.keys[a] = originalNode.keys[i];
-//    			newNode.leaf = true;
-//    			originalNode.next = newNode;
-//    			a++;
-//    		}
-//    	}
-//      
-//      
-//      
-//    }
     
     // Index parameter should be the index in the parent's children array where the new node
     // should be inserted
@@ -281,21 +201,27 @@ class BTree {
       
     private void splitLeaf(BTreeNode child, BTreeNode parent, Student student, BTreeNode newNode, int index) {
 
-      // Create a temporary array we can add the new key to
-      long[] combinedKeys = addKeyToArray(child.keys, student.studentId, true);
+      // Add the key-value pair to the child node 
+      BTreeNode updatedChildNode = addKeyValToNode(child, student.studentId, student.recordId, true);
       
       // Now we have an array with the old and new keys
       // Split this between the two child nodes
-      splitKeysBetweenNodes(combinedKeys, child, newNode);
+      splitKeyValsBetweenNodes(updatedChildNode, child, newNode);
 
       // Update next pointers for both nodes
       newNode.next = child.next;
       child.next = newNode;
         
-      //TODO split values between nodes
+      //TODO split values between nodes: done via addKeyValToNode & splitKeyValsBetweenNodes
       
       //TODO Update list of children on parent
       // This needs to be updated to temporarily expand the children array if full
+      if(parent.children[parent.children.length-1] != null) { // children array is full 
+    	  System.out.println("children are full");
+    	  int newSize = (parent.children.length);
+    	  parent.children= Arrays.copyOf(parent.children, newSize+1);
+      }
+      
       for (int i = parent.children.length - 1; i > index; i--) {
         parent.children[i] = parent.children[i - 1];
       }
@@ -307,18 +233,31 @@ class BTree {
         expand = true;
       }
       
-      parent.keys = addKeyToArray(parent.keys, newNode.keys[0], expand);
+      parent = addKeyValToNode(parent, newNode.keys[0], newNode.values[0], expand);
       parent.n++;
     }
     
-    private long[] addKeyToArray(long[] keys, long key, boolean expand) {
+    /**
+     * Private helper method to add a key value pair to an existing node.
+     * Add the pair to the node even if it means the node being overfilled.
+     * The overfilled node is passed to splitKeyValsBetweenNodes for splitting.
+     * @param existingNode -- existing node to add the key value pair
+     * @param key -- new key to add to the node
+     * @param value -- value associated with the key
+     * @param expand -- true if the size of the key/value arrays need to become larger to accomodate the new key/value pair
+     * @return
+     */
+    private BTreeNode addKeyValToNode(BTreeNode existingNode, long key, long value, boolean expand) {
       
+    	long[] keys = existingNode.keys;
+    	long[] vals = existingNode.values;
       // Create a temporary array we can add the new key to
       int newLength = keys.length;
       if (expand) {
         newLength++;
       }
       long[] combinedKeys = Arrays.copyOf(keys, newLength);
+      long[] combinedVals = Arrays.copyOf(vals, newLength);
       
       // Find the index to insert the new value
       int index = -1;
@@ -333,52 +272,117 @@ class BTree {
       // If not, then slide all the existing values toward the end
       if (index == -1) {
         combinedKeys[combinedKeys.length - 1] = key;
+        combinedVals[combinedKeys.length - 1] = value;
       } else {
         for (int j = combinedKeys.length - 1; j > index; j--) {
           combinedKeys[j] = combinedKeys[j - 1];
+          combinedVals[j] = combinedKeys[j - 1];
         }
         combinedKeys[index] = key;
+        combinedVals[index] = value;
       }
       
-      return combinedKeys;
+      existingNode.keys = combinedKeys;
+      if(existingNode.leaf) { // only add values to a leaf node
+    	  existingNode.values = combinedVals;
+      }
+      return existingNode;
     }
     
-    private void splitKeysBetweenNodes(long[] array, BTreeNode left, BTreeNode right) {
+    /**
+     * Private helper method to split key value pairs from 1 parent node into 2 child nodes
+     * @param nodeToSplit -- parent node to split
+     * @param left -- left child node of the parent
+     * @param right -- right child node of the parent
+     */
+    private void splitKeyValsBetweenNodes(BTreeNode nodeToSplit, BTreeNode left, BTreeNode right) {
+      
+      long[] keyArray = nodeToSplit.keys;
+      long[] valArray = nodeToSplit.values;
       
       // Create fresh arrays with the correct length (minus the temporary expansion)
       long[] leftKeys = new long[left.keys.length];
+      long[] leftVals = new long[left.values.length];
       long[] rightKeys = new long[right.keys.length];
+      long[] rightVals = new long[right.values.length];
       
       // Existing (left) child
-      int mid = array.length / 2;
+      int mid = keyArray.length / 2;
       for (int k = 0; k < mid; k++) {
-        leftKeys[k] = array[k];
+        leftKeys[k] = keyArray[k];
+        leftVals[k] = valArray[k];
       }
       
       // New (right) child
       int newKeysIndex = 0;
-      for (int k = mid; k < array.length; k++) {
-        rightKeys[newKeysIndex++] = array[k];
+      for (int k = mid; k < keyArray.length; k++) {
+        rightKeys[newKeysIndex] = keyArray[k];
+        rightVals[newKeysIndex++] = valArray[k];
+        
       }
       
       // Update the key arrays for each child node
       left.keys = leftKeys;
+      left.values = leftVals;
       right.keys = rightKeys;
+      right.values = rightVals;
       
       // Update key count
       left.n = mid;
-      right.n = (array.length - mid);
+      right.n = (keyArray.length - mid);
       
       return;
     }
     
     private void splitNonLeaf(BTreeNode child, BTreeNode parent, BTreeNode newNode, int index) {
-      //TODO split keys
-      
+    	//TODO split keys
+    	long midKey = child.keys[child.keys.length/2];
+    	long midIndex = child.keys.length/2;
+    	
+    	long[] leftKeys = new long[2 * t - 1];
+    	for(int i = 0; i < midIndex; i++) {
+    		leftKeys[i] = child.keys[i];
+    	}
+    	
+    	long[] rightKeys = new long[2 * t - 1];
+    	int counter = 0;
+    	for(int i = (int) (midIndex+1); i < child.keys.length; i++) {
+    		rightKeys[counter++]=child.keys[i];
+    	}
+    	child.keys = leftKeys;
+    	newNode.keys = rightKeys;
+    	
       //TODO split children
+    	int midChild = child.children.length/2;
+    	BTreeNode[] leftChildren = new BTreeNode[2*t];
+    	for(int i = 0; i <= midChild; i++) {
+    		leftChildren[i] = child.children[i];
+    	}
+    	
+    	BTreeNode[] rightChildren = new BTreeNode[2*t];
+    	counter=0;
+    	for(int i = midChild+1; i < child.children.length; i++) {
+    		rightChildren[counter++]=child.children[i];
+    	}
+    	
+    	child.children=leftChildren;
+    	newNode.children=rightChildren;
+    	
+    	boolean changedSize = false;
+    	if(index == parent.children.length) {
+    		int newSize = parent.children.length;
+    		parent.keys = Arrays.copyOf(parent.keys, newSize);
+    		parent.children = Arrays.copyOf(parent.children,newSize+1);   
+    		changedSize = true;
+    	}
+    	
+    	parent.children[index-1]=child;
+    	parent.children[index]=newNode;
       
       //TODO push up middle key - expand parent's keys array and add new key in the right spot
-      
+    	parent.keys[index-1] = midKey;
+    	
+    	
       return;
     }
     

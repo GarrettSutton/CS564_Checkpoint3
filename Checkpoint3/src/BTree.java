@@ -510,8 +510,11 @@ class BTree {
             child.next.n--;
             
           } else { // Next leaf does not have available keys - need to merge child nodes
-            //TODO handle removing key from parent
-            
+           
+        	//TODO handle removing key from parent
+        	deleteFromParent(root, key);
+        	
+        	  
             // Move keys from next -> child
             int nextIndex = 0;
             for (int i = child.n; i < child.keys.length; i++) {
@@ -595,6 +598,45 @@ class BTree {
       return true;
     }
 
+    /*
+     * This function needs to
+     * if merge happened and key removed is not in index node, 
+     */
+    private boolean deleteFromParent(BTreeNode node, long key) {
+    	boolean doneDeleting = false;
+    	int childIndex = -1;
+    	BTreeNode current = node;
+    	
+        // Check to see if key is in the node, if not find the next child to visit
+    	while (!doneDeleting && !current.leaf) {//continue until we find the parent and delete or until we get to leaf
+    		for (int i = 0; i < current.keys.length; i++) {
+    		
+    			if (current.keys[i] == key) {//we found the key we deleted in the child node
+    				//in this case, need to: delete the value, replace with a value in the child tree, check to see if merge is necessary, set new pointer to correct children
+    				for (int k = childIndex; k < current.keys.length; k++) {
+    			        if (current.keys[k] == current.keys.length) {
+    			          current.keys[k] = 0;
+    			        } else {
+    			          current.keys[k] = current.keys[k + 1];
+    			        }
+    			      }   			   
+    			      current.n--;
+    				doneDeleting = true;  				
+    			}
+    			else if ((key < current.keys[i]) || (node.keys[i] == 0)) { //we didn't find the key in an index node, go to next child in search of key
+    				childIndex = i;
+    				current = current.children[childIndex];
+    			}
+    		}
+    	}
+    	
+    	//after removing the key, need to pull replace it with the 
+    	
+    	return doneDeleting;
+    }
+    
+    
+    
     List<Long> print() {
 
         List<Long> listOfRecordID = new ArrayList<>();

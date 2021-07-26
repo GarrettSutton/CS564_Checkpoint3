@@ -29,7 +29,43 @@ class BTree {
          * Return recordID for the given StudentID.
          * Otherwise, print out a message that the given studentId has not been found in the table and return -1.
          */
+      if (root == null) {
         return -1;
+      }
+      
+      return searchHelper(root, studentId);
+    }
+      
+    long searchHelper(BTreeNode current, long key) {
+      // If the current node is a leaf, search the keys
+      // If found, return the value at the same index where the key was found
+      if (current.leaf) {
+        for (int i = 0; i < current.keys.length; i++) {
+          if (key == current.keys[i]) {
+            return current.values[i];
+          }
+        }
+        
+        // Key was not found
+        return -1;
+        
+      } else { // Find the right child to visit
+        int childIndex = -1;
+        for (int j = 0; j < current.keys.length; j++) {
+          if ((key < current.keys[j]) || (current.keys[j] == 0)) {
+            childIndex = j;
+            break; // Stop looping once we found the right child
+          }
+        }
+        
+        // If the student key is greater than all in current, visit the last child
+        if (childIndex == -1) {
+          childIndex = current.children.length - 1;
+        }
+        
+        // Visit the child node
+        return searchHelper(current.children[childIndex], key);
+      }
     }
 
     BTree insert(Student student) {
@@ -396,6 +432,7 @@ class BTree {
          * Also, delete in student.csv after deleting in B+Tree, if it exists.
          * Return true if the student is deleted successfully otherwise, return false.
          */
+      boolean result = false;
       
       // Root doesn't exist
       if (root == null) {
@@ -404,12 +441,120 @@ class BTree {
       
       // Root is a leaf - delete student from root
       if (root.leaf == true) {
-        return deleteFromNode(root, studentId);
+        result = deleteFromNode(root, studentId);
+      } else { // Root is not a leaf - find the right node to delete from
+        result = visitChildDelete(root, studentId);
       }
       
-      // Root is not a leaf - find the right node to delete from
+      // TODO
+      if (result) {
+        // delete from CSV file
+      }
+      
+      return result;
+    }
+    
+    private boolean visitChildDelete(BTreeNode current, long key) {
+
+      int childIndex = -1;
+      boolean result = false;
+      
+      // Find the right child to visit
+      for (int i = 0; i < current.keys.length; i++) {
+        if ((key < current.keys[i]) || (current.keys[i] == 0)) {
+          childIndex = i;
+          break; // Stop looping once we found the right child
+        }
+      }
+      
+      // If the student key is greater than all in current, visit the last child
+      if (childIndex == -1) {
+        childIndex = current.children.length - 1;
+      }
+      
+      // If the next child is a leaf, try to delete from it
+      // If not, then visit the child recursively
+      BTreeNode child = current.children[childIndex];
+      
+      if (child != null && child.leaf) { // Child is a leaf
+        result = deleteFromNode(child, key);
         
-      return true;
+        // If the key wasn't found, return
+        if (!result) {
+          return false;
+        }
+        
+        // Key was found - check if child has enough keys left
+        int minKeys = (((2 * t - 1) / 2) + 1);
+        if (child.n < minKeys) { // Child needs more keys
+          
+          // Try to redistribute from sibling
+          if (child.next != null && child.next.n > minKeys) { // Next leaf has available keys
+            
+            // Move first key/value in next to child
+            child.keys[child.n] = child.next.keys[0];
+            child.values[child.n] = child.next.values[0];
+            
+            // Remove key from next's keys array
+            for (int i = 0; i < child.next.keys.length - 1; i++) {
+              child.next.keys[i] = child.next.keys[i + 1];
+            }
+            // Clear the last index in the array
+            child.next.keys[child.next.keys.length - 1] = 0;
+            
+            // Replace key in parent with new 1st key in next
+            current.keys[childIndex - 1] = child.next.keys[0];
+            
+            // Remove value from next's keys array
+            for (int i = 0; i < child.next.values.length - 1; i++) {
+              child.next.values[i] = child.next.values[i + 1];
+            }
+            // Clear the last index in the array
+            child.next.values[child.next.values.length - 1] = 0;
+            
+            // Update the key counts
+            child.n++;
+            child.next.n--;
+            
+          } else { // Next leaf does not have available keys - need to merge child nodes
+            //TODO handle removing key from parent
+            
+            // Move keys from next -> child
+            int nextIndex = 0;
+            for (int i = child.n; i < child.keys.length; i++) {
+              child.keys[i] = child.next.keys[nextIndex];
+              nextIndex++;
+            }
+            
+            // Move values from next -> child
+            nextIndex = 0;
+            for (int i = child.n; i < child.values.length; i++) {
+              child.values[i] = child.next.values[nextIndex];
+              nextIndex++;
+            }
+            
+            // Update key count
+            child.n += child.next.n;
+            
+            // Update child's next pointer
+            if (child.next != null) {
+              child.next = child.next.next;
+            } else {
+              child.next = null;
+            }
+          }
+        }
+      } else { // Child is not a leaf
+        result = visitChildDelete(child, key);
+        
+        if (!result) {
+          return false;
+        }
+
+        //TODO check if child nodes need to be merged
+        
+      }
+      return result;
     }
     
     private boolean deleteFromNode(BTreeNode node, long key) {
@@ -437,6 +582,9 @@ class BTree {
         }
       }
       
+      // Update key count
+      node.n--;
+      
       // Return if this isn't a leaf
       if (!node.leaf) {
         return true;
@@ -450,7 +598,7 @@ class BTree {
           node.values[k] = node.values[k + 1];
         }
       }
-      
+
       return true;
     }
 
@@ -464,6 +612,28 @@ class BTree {
          * Return a list of recordIDs from left to right of leaf nodes.
          *
          */
+        BTreeNode current = root;
+        
+        if (root == null) {
+          return listOfRecordID;
+        }
+        
+        // Starting from the root, traverse the tree using the left-most child of each non-leaf node
+        while (current != null && !current.leaf) {
+          current = current.children[0];
+        }
+        
+        // Current is now the left-most leaf node
+        // For each leaf, pull the record IDs from the values array
+        while (current != null) {
+          for (int i = 0; i < current.keys.length; i++) {
+            if (current.keys[i] != 0) {
+              listOfRecordID.add(current.values[i]);
+            }
+          }
+          current = current.next;
+        }
+        
         return listOfRecordID;
     }
 }

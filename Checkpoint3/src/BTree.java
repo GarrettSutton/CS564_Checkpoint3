@@ -246,7 +246,7 @@ class BTree {
       if (child != null && child.leaf) { // Child is a leaf
         if (child.n == child.keys.length) { // Child is full
           // TODO Split
-          split(child, current, student, true, childIndex + 1);
+          split(child, current, student, true, childIndex);
         } else { // Add key/value to child
 //          child.keys[child.keys.length] = student.studentId;
 //          Arrays.sort(child.keys);
@@ -312,7 +312,7 @@ class BTree {
         splitNonLeaf(child, parent, newNode, index);
       }
       
-      return;
+      return; 
     }
       
     private void splitLeaf(BTreeNode child, BTreeNode parent, Student student, BTreeNode newNode, int index) {
@@ -604,7 +604,7 @@ class BTree {
 
     /*
      * This function finds the key in the parent node, replaces it with the correct value from the child node
-     * returns true if an index value was deleted so we know we have to rebalance
+     * returns true if an index value was deleted and we know we have to rebalance
      */
     private boolean deleteFromParent(BTreeNode node, long key) {
     	boolean doneSearching = false;
@@ -647,7 +647,7 @@ class BTree {
         	int successorIndex = 0; //successor should be first value in array
         	current.keys[keyIndex] = current.children[childIndex - 1].keys[successorIndex];
         }
-        //both predecessor and successor children have min number of keys (will need to merge both children in this case
+        //both predecessor and successor children have min number of keys (will need to merge both children
         else {
         	needMerge = true;
         }

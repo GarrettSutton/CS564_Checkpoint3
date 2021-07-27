@@ -1,3 +1,10 @@
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
@@ -36,7 +43,7 @@ class BTree {
       return searchHelper(root, studentId);
     }
       
-    long searchHelper(BTreeNode current, long key) {
+    private long searchHelper(BTreeNode current, long key) {
       // If the current node is a leaf, search the keys
       // If found, return the value at the same index where the key was found
       if (current.leaf) {
@@ -445,6 +452,69 @@ class BTree {
       }
       
       return result;
+    }
+    
+    private void deleteFromCSV(long studentId) {
+      
+      // Get the existing CSV
+      File original = new File("src/StudentTest.csv");
+      
+      // Create a temp CSV
+      File temp = new File("src/StudentTest_tmp.csv");
+      
+      // Setup for reading the original file
+      FileReader fr = null;
+      try {
+        fr = new FileReader(original);
+      } catch (FileNotFoundException e1) {
+        e1.printStackTrace();
+      }
+      
+      BufferedReader reader = new BufferedReader(fr);
+
+      // Setup for writing to the temp file
+      PrintWriter writer = null;
+      try {
+        writer = new PrintWriter(new FileWriter(temp));
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      
+      String line = null;
+      String[] parsedLine = null;
+      
+      // Read in original file
+      try {
+        while ((line = reader.readLine()) != null) {
+          parsedLine = line.split(",");
+          // If studentId equals the ID from the file, skip the line
+          if (Long.toString(studentId).equals(parsedLine[0])) {
+            continue;
+          }
+          // Write the line to the temp file
+          writer.println(line);
+        }
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+
+      // Close readers/writers
+      writer.close();
+      
+      try {
+        reader.close();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      try {
+        fr.close();
+      } catch (IOException e1) {
+        e1.printStackTrace();
+      }
+      
+      // Delete the original file and rename the temp file
+      original.delete();
+      temp.renameTo(original);
     }
     
     private boolean visitChildDelete(BTreeNode current, long key) {

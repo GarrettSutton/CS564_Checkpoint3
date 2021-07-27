@@ -652,7 +652,7 @@ class BTree {
         	needMerge = true;
         }
     	
-    	
+    	rebalancePostDelete(root);
     	return needMerge;
     }
     /*

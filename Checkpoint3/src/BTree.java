@@ -451,6 +451,7 @@ class BTree {
 
       int childIndex = -1;
       boolean result = false;
+      boolean mergeChildren = false;
       
       // Find the right child to visit
       for (int i = 0; i < current.keys.length; i++) {
@@ -512,7 +513,8 @@ class BTree {
           } else { // Next leaf does not have available keys - need to merge child nodes
            
         	//TODO handle removing key from parent
-        	deleteFromParent(root, key);
+        	mergeChildren = deleteFromParent(root, key);
+
         	
         	  
             // Move keys from next -> child
@@ -547,8 +549,10 @@ class BTree {
           return false;
         }
 
-        //TODO check if child nodes need to be merged
-        
+        //TODO actually merge children of parent node value was deleted from
+        if (mergeChildren) {
+        	
+        }
       }
       return result;
     }
@@ -599,29 +603,24 @@ class BTree {
     }
 
     /*
-     * This function needs to
-     * if merge happened and key removed is not in index node, 
+     * This function finds the key in the parent node, replaces it with the correct value from the child node
+     * returns true if an index value was deleted so we know we have to rebalance
      */
     private boolean deleteFromParent(BTreeNode node, long key) {
-    	boolean doneDeleting = false;
+    	boolean doneSearching = false;
     	int childIndex = -1;
+    	int keyIndex = -1;
     	BTreeNode current = node;
+    	int minKeys = (((2 * t - 1) / 2) + 1);
+    	boolean needMerge = false;
     	
         // Check to see if key is in the node, if not find the next child to visit
-    	while (!doneDeleting && !current.leaf) {//continue until we find the parent and delete or until we get to leaf
+    	while (!doneSearching && !current.leaf) {//continue until we find the parent and delete or until we get to leaf
     		for (int i = 0; i < current.keys.length; i++) {
-    		
-    			if (current.keys[i] == key) {//we found the key we deleted in the child node
-    				//in this case, need to: delete the value, replace with a value in the child tree, check to see if merge is necessary, set new pointer to correct children
-    				for (int k = childIndex; k < current.keys.length; k++) {
-    			        if (current.keys[k] == current.keys.length) {
-    			          current.keys[k] = 0;
-    			        } else {
-    			          current.keys[k] = current.keys[k + 1];
-    			        }
-    			      }   			   
-    			      current.n--;
-    				doneDeleting = true;  				
+    			if (current.keys[i] == key) {//we found the key we deleted in the child node in a parent node
+    				keyIndex = i;	
+    				doneSearching = true;
+    				break;  //stop looping once we find the key in a parent node				
     			}
     			else if ((key < current.keys[i]) || (node.keys[i] == 0)) { //we didn't find the key in an index node, go to next child in search of key
     				childIndex = i;
@@ -630,12 +629,38 @@ class BTree {
     		}
     	}
     	
-    	//after removing the key, need to pull replace it with the 
+    	//we know current is the parent with the key, and keyIndex is the location of the key. 
+    	//Get correct child index
+        for (int i = 0; i < current.keys.length; i++) {
+          if ((key < current.keys[i]) || (current.keys[i] == 0)) {
+            childIndex = i;
+            break; // Stop looping once we found the right child
+          }
+        }
+		//check preceding child. If size is greater than minimum, take predecessor and replace parent with it
+        if (current.children[childIndex - 1].keys.length > minKeys) {
+        	int predecessorIndex = current.children[childIndex-1].keys.length;
+        	current.keys[keyIndex] = current.children[childIndex - 1].keys[predecessorIndex];
+         }
+        //if size of preceding child is not greater than min, check successor child, replace parent with successor key
+        else if (current.children[childIndex + 1].keys.length > minKeys) {
+        	int successorIndex = 0; //successor should be first value in array
+        	current.keys[keyIndex] = current.children[childIndex - 1].keys[successorIndex];
+        }
+        //both predecessor and successor children have min number of keys (will need to merge both children in this case
+        else {
+        	needMerge = true;
+        }
     	
-    	return doneDeleting;
+    	
+    	return needMerge;
     }
-    
-    
+    /*
+     * private helper function to rebalance the tree after deleting a key in an index node
+     */
+    private void rebalancePostDelete(BTreeNode node) {
+    	
+    }
     
     List<Long> print() {
 

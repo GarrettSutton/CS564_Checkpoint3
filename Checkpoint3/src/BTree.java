@@ -590,12 +590,7 @@ class BTree {
             child.next.n--;
             
           } else { // Next leaf does not have available keys - need to merge child nodes
-           
-        	//TODO handle removing key from parent
-        	mergeChildren = deleteFromParent(root, key);
-
-        	
-        	  
+                  		      	  
             // Move keys from next -> child
             int nextIndex = 0;
             for (int i = child.n; i < child.keys.length; i++) {
@@ -619,6 +614,12 @@ class BTree {
             } else {
               child.next = null;
             }
+            
+         	//TODO handle removing key from parent
+         	mergeChildren = deleteFromParent(root, key);
+         	
+         	
+         	  
           }
         }
       } else { // Child is not a leaf
@@ -628,10 +629,6 @@ class BTree {
           return false;
         }
 
-        //TODO actually merge children of parent node value was deleted from
-        if (mergeChildren) {
-        	
-        }
       }
       return result;
     }
@@ -701,9 +698,12 @@ class BTree {
     				doneSearching = true;
     				break;  //stop looping once we find the key in a parent node				
     			}
-    			else if ((key < current.keys[i]) || (node.keys[i] == 0)) { //we didn't find the key in an index node, go to next child in search of key
+    			else if ((key < current.keys[i]) && !current.leaf) { //we didn't find the key, go to next child in search of key
     				childIndex = i;
     				current = current.children[childIndex];
+    			}
+    			else { //key is not in and index node, return
+    				return false;
     			}
     		}
     	}
@@ -730,15 +730,8 @@ class BTree {
         else {
         	needMerge = true;
         }
-    	
-    	rebalancePostDelete(root);
+
     	return needMerge;
-    }
-    /*
-     * private helper function to rebalance the tree after deleting a key in an index node
-     */
-    private void rebalancePostDelete(BTreeNode node) {
-    	
     }
     
     List<Long> print() {

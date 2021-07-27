@@ -615,10 +615,8 @@ class BTree {
               child.next = null;
             }
             
-         	//TODO handle removing key from parent
+         	//starts with root, searches for key again, deletes if found in index node.
          	mergeChildren = deleteFromParent(root, key);
-         	
-         	
          	  
           }
         }
@@ -726,9 +724,12 @@ class BTree {
         	int successorIndex = 0; //successor should be first value in array
         	current.keys[keyIndex] = current.children[childIndex - 1].keys[successorIndex];
         }
-        //both predecessor and successor children have min number of keys (will need to merge both children
+        //both predecessor and successor children have min number of keys (will need to merge both children, rearrange array
         else {
         	needMerge = true;
+        	for (int i = keyIndex; i < current.keys.length - 1; i++) { //rearranges the parent array after removing key
+        		current.keys[i] = current.keys[i + 1];
+        	}
         }
 
     	return needMerge;

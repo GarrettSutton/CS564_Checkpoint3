@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.Arrays;
 /**
  * B+Tree Structure
@@ -168,6 +169,43 @@ class BTree {
     	  }
     	}
     	
+    	// read csv to check for duplicates
+    	List<Long> studentList = new ArrayList<>();
+        Scanner readStudents=null;
+        try {
+			readStudents = new Scanner(new File("src/Student.csv"));
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			System.out.println("Student file not found.");
+		}
+        
+		while(readStudents.hasNextLine()) {
+			String[] studentLine = readStudents.nextLine().split(",");
+			long studentId= Long.parseLong(studentLine[0]);
+        	studentList.add(studentId);
+		}
+		readStudents.close();
+		
+		// check for duplicates. If no duplicate, add new student to Student.csv
+		FileWriter studentFile=null;
+		try {
+			studentFile = new FileWriter("src/Student.csv",true);
+		} catch (IOException e) {
+			System.out.println("Student file not found.");
+		}
+		
+		if(!studentList.contains(student.studentId)) {
+			String newStudent = student.studentId + "," + student.studentName + "," + student.major + "," + student.level + "," + student.age + "," + student.recordId + "\n";
+				try {
+					studentFile.write(newStudent);
+					studentFile.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+		}
+		
         return this;
     }
     
@@ -219,9 +257,7 @@ class BTree {
           split(child, current, student, false, childIndex + 1);
         }
         
-        //visitChild(current,student);
       }
-      // check current after the copy up from splitting
       
     }
     
@@ -276,7 +312,6 @@ class BTree {
       
       // Copy up middle key - expand parent's keys array if needed, add new key in the right spot
       boolean expand = false;
-      //if (parent.n == parent.keys.length) {
       if(changedSize) {  
       	expand = true;
       }

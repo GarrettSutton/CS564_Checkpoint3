@@ -41,7 +41,7 @@ public class BTreeMain {
                 while (s2.hasNext()) {
 
                     String operation = s2.next();
-
+                    //System.out.println(operation);
                     switch (operation) {
                         case "insert": {
 

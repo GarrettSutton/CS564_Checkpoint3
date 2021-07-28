@@ -278,10 +278,8 @@ class BTree {
       // Call the right method based on leaf status
       if (isLeaf) {
         splitLeaf(child, parent, student, newNode, index);
-        System.out.println("split leaf");
       } else {
         splitNonLeaf(child, parent, newNode, index);
-        System.out.println("split non leaf");
       }
       
       return;
@@ -514,6 +512,7 @@ class BTree {
       // TODO
       if (result) {
         // delete from CSV file
+    	  
       }
       
       return result;
@@ -640,7 +639,7 @@ class BTree {
       
       // Key found - remove it from the array
       for (int k = index; k < node.keys.length; k++) {
-        if (node.keys[k] == node.keys.length) {
+        if (k == node.keys.length-1) {
           node.keys[k] = 0;
         } else {
           node.keys[k] = node.keys[k + 1];
@@ -657,7 +656,7 @@ class BTree {
       
       // Remove the same index from the values in the leaf
       for (int k = index; k < node.values.length; k++) {
-        if (node.values[k] == node.values.length) {
+        if (k == node.values.length-1) {
           node.values[k] = 0;
         } else {
           node.values[k] = node.values[k + 1];

@@ -1,6 +1,15 @@
 3
 insert 320874982 Jack Ryan Law FR 18
 delete 115987938
+delete 754316358
+delete 758702380
+delete 763088402
+delete 916599172
+delete 1061337898
+delete 692912050
+delete 321114982
 search 320874982
 search 455798411
+search 692912050
+search 60839453
 insert 321114982 Michael Scott Management RR 21

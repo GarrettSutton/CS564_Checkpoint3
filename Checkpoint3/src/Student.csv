@@ -1,8 +1,6 @@
-60839453,Charles Harris,Architecture,SR,22,1
 99354543,Susan Martin,Law,JR,20,2
 51135593,Maria White,English,SR,21,0
 112348546,Joseph Thompson,Computer Science,SO,19,3
-115987938,Christopher Garcia,Computer Science,JR,20,4
 132977562,Angela Martinez,History,SR,20,5
 269734834,Thomas Robinson,Psychology,SO,18,6
 280158572,Margaret Clark,Animal Science,FR,18,7
@@ -47,7 +45,6 @@
 679753984,Betty Adams,Economics,JR,44,46
 684140006,Edward Baker,Veterinary Medicine,SR,45,47
 688526028,Betty Adams,Economics,JR,46,48
-692912050,Edward Baker,Veterinary Medicine,SR,47,49
 697298072,Betty Adams,Economics,JR,48,50
 701684094,Edward Baker,Veterinary Medicine,SR,49,51
 706070116,Betty Adams,Economics,JR,50,52
@@ -61,9 +58,6 @@
 741158292,Betty Adams,Economics,JR,58,60
 745544314,Edward Baker,Veterinary Medicine,SR,59,61
 749930336,Betty Adams,Economics,JR,60,62
-754316358,Edward Baker,Veterinary Medicine,SR,61,63
-758702380,Betty Adams,Economics,JR,62,64
-763088402,Edward Baker,Veterinary Medicine,SR,63,65
 767474424,Betty Adams,Economics,JR,64,66
 771860446,Edward Baker,Veterinary Medicine,SR,65,67
 776246468,Betty Adams,Economics,JR,66,68
@@ -98,7 +92,6 @@
 903441106,Edward Baker,Veterinary Medicine,SR,95,97
 907827128,Betty Adams,Economics,JR,96,98
 912213150,Edward Baker,Veterinary Medicine,SR,97,99
-916599172,Betty Adams,Economics,JR,98,100
 920985194,Edward Baker,Veterinary Medicine,SR,99,101
 925371216,Betty Adams,Economics,JR,100,102
 929757238,Edward Baker,Veterinary Medicine,SR,101,103
@@ -131,7 +124,6 @@
 1048179832,Betty Adams,Economics,JR,128,130
 1052565854,Edward Baker,Veterinary Medicine,SR,129,131
 1056951876,Betty Adams,Economics,JR,130,132
-1061337898,Edward Baker,Veterinary Medicine,SR,131,133
 1065723920,Betty Adams,Economics,JR,132,134
 1070109942,Edward Baker,Veterinary Medicine,SR,133,135
 1074495964,Betty Adams,Economics,JR,134,136
@@ -162,4 +154,4 @@
 1184146514,Edward Baker,Veterinary Medicine,SR,159,161
 1188532536,Betty Adams,Economics,JR,160,162
 320874982,Jack Ryan,Law,FR,18,164
-321114982,Michael Scott,Management,RR,21,166
+321114982,Michael Scott,Management,RR,21,159

@@ -41,7 +41,7 @@ public class BTreeMain {
                 while (s2.hasNext()) {
 
                     String operation = s2.next();
-
+                    //System.out.println(operation);
                     switch (operation) {
                         case "insert": {
 
@@ -52,7 +52,6 @@ public class BTreeMain {
                             int age = Integer.parseInt(s2.next());
                             /** TODO: Write a logic to generate recordID*/
 
-                            //long recordID = ;
                             long recordID = ++size;
 
                             Student s = new Student(studentId, age, studentName, major, level, recordID);

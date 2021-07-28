@@ -1,7 +1,5 @@
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -44,7 +42,7 @@ class BTree {
       return searchHelper(root, studentId);
     }
       
-    private long searchHelper(BTreeNode current, long key) {
+    long searchHelper(BTreeNode current, long key) {
       // If the current node is a leaf, search the keys
       // If found, return the value at the same index where the key was found
       if (current.leaf) {
@@ -169,15 +167,19 @@ class BTree {
     	  }
     	}
     	
+    	
+    	// Sync the Student.csv with the BTree
+    	
     	// read csv to check for duplicates
     	List<Long> studentList = new ArrayList<>();
         Scanner readStudents=null;
+        
         try {
 			readStudents = new Scanner(new File("src/Student.csv"));
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			System.out.println("Student file not found.");
+			System.out.println("Student file not found here.");
 		}
         
 		while(readStudents.hasNextLine()) {
@@ -192,7 +194,7 @@ class BTree {
 		try {
 			studentFile = new FileWriter("src/Student.csv",true);
 		} catch (IOException e) {
-			System.out.println("Student file not found.");
+			System.out.println("Student file not found or here.");
 		}
 		
 		if(!studentList.contains(student.studentId)) {
@@ -215,8 +217,8 @@ class BTree {
      * If the child is a leaf, it will handle inserting the key/value and splitting if needed
      * If the child is not a leaf, it will call itself recursively
      * 
-     * @param current
-     * @param student
+     * @param current - BTreeNode to start with and find it's child
+     * @param student - student being inserted to the BTree
      */
     private void visitChild(BTreeNode current, Student student) {
       
@@ -244,7 +246,7 @@ class BTree {
       if (child != null && child.leaf) { // Child is a leaf
         if (child.n == child.keys.length) { // Child is full
           // TODO Split
-          split(child, current, student, true, childIndex);
+          split(child, current, student, true, childIndex + 1);
         } else { // Add key/value to child
           child = addKeyValToNode(child, key, value,false);
           child.n++;
@@ -256,14 +258,19 @@ class BTree {
         if (child.keys.length > (2 * t - 1)) {
           split(child, current, student, false, childIndex + 1);
         }
-        
       }
       
     }
     
     
-    // Index parameter should be the index in the parent's children array where the new node
-    // should be inserted
+    /**
+     * Split the child node if it is too large
+     * @param child -- child BTreeNode
+     * @param parent -- parent BTreeNode to the child
+     * @param student -- student to be inserted to the child
+     * @param isLeaf -- is the childNode a leaf?
+     * @param index -- index in the parent's children array where the new student is being inserted
+     */
     private void split(BTreeNode child, BTreeNode parent, Student student, Boolean isLeaf, int index) {
 
       // Create the new node
@@ -276,11 +283,17 @@ class BTree {
         splitNonLeaf(child, parent, newNode, index);
       }
       
-      return; 
+      return;
     }
-
-
-      
+    
+    /**
+     * Add to and split the a leaf node and update the parent
+     * @param child -- leaf node
+     * @param parent -- parent to the leaf
+     * @param student -- student to add to the BTree
+     * @param newNode -- node to hold the over-fill from the child
+     * @param index -- index in the parent's children array where the new node is
+     */
     private void splitLeaf(BTreeNode child, BTreeNode parent, Student student, BTreeNode newNode, int index) {
 
       // Add the key-value pair to the child node 
@@ -399,7 +412,7 @@ class BTree {
       // New (right) child
       int newKeysIndex = 0;
       for (int k = mid; k < keyArray.length; k++) {
-    	rightKeys[newKeysIndex] = keyArray[k];
+    	  rightKeys[newKeysIndex] = keyArray[k];
         rightVals[newKeysIndex++] = valArray[k];
         
       }
@@ -417,6 +430,13 @@ class BTree {
       return;
     }
     
+    /**
+     * Split an internal (non-leaf) node in the tree
+     * @param child -- internal node to be split
+     * @param parent -- parent of the internal node that is being split
+     * @param newNode -- new node that gets overfill from the child
+     * @param index -- location in the parent's children array where newNode is placed
+     */
     private void splitNonLeaf(BTreeNode child, BTreeNode parent, BTreeNode newNode, int index) {
     	//TODO split keys
     	long midKey = child.keys[child.keys.length/2];
@@ -433,7 +453,9 @@ class BTree {
     		rightKeys[counter++]=child.keys[i];
     	}
     	child.keys = leftKeys;
+    	child.n = (int) midIndex;
     	newNode.keys = rightKeys;
+    	newNode.n = (int) (child.keys.length-midIndex);
     	
       //TODO split children
     	int midChild = child.children.length/2;
@@ -451,12 +473,10 @@ class BTree {
     	child.children=leftChildren;
     	newNode.children=rightChildren;
     	
-    	boolean changedSize = false;
     	if(index == parent.children.length) {
     		int newSize = parent.children.length;
     		parent.keys = Arrays.copyOf(parent.keys, newSize);
     		parent.children = Arrays.copyOf(parent.children,newSize+1);   
-    		changedSize = true;
     	}
     	
     	parent.children[index-1]=child;
@@ -464,7 +484,7 @@ class BTree {
       
       //TODO push up middle key - expand parent's keys array and add new key in the right spot
     	parent.keys[index-1] = midKey;
-    	
+    	parent.n++;
     	
       return;
     }
@@ -488,91 +508,21 @@ class BTree {
         result = deleteFromNode(root, studentId);
       } else { // Root is not a leaf - find the right node to delete from
         result = visitChildDelete(root, studentId);
-        if (!result) {
-        	return result;
-        }
-        //deleted key from root, making child new root after merging
-        if (root.n == 0) {
-        	root = root.children[0];
-        }
       }
       
       // TODO
       if (result) {
         // delete from CSV file
+    	  
       }
       
       return result;
-    }
-    
-    private void deleteFromCSV(long studentId) {
-      
-      // Get the existing CSV
-      File original = new File("src/StudentTest.csv");
-      
-      // Create a temp CSV
-      File temp = new File("src/StudentTest_tmp.csv");
-      
-      // Setup for reading the original file
-      FileReader fr = null;
-      try {
-        fr = new FileReader(original);
-      } catch (FileNotFoundException e1) {
-        e1.printStackTrace();
-      }
-      
-      BufferedReader reader = new BufferedReader(fr);
-
-      // Setup for writing to the temp file
-      PrintWriter writer = null;
-      try {
-        writer = new PrintWriter(new FileWriter(temp));
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-      
-      String line = null;
-      String[] parsedLine = null;
-      
-      // Read in original file
-      try {
-        while ((line = reader.readLine()) != null) {
-          parsedLine = line.split(",");
-          // If studentId equals the ID from the file, skip the line
-          if (Long.toString(studentId).equals(parsedLine[0])) {
-            continue;
-          }
-          // Write the line to the temp file
-          writer.println(line);
-        }
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-
-      // Close readers/writers
-      writer.close();
-      
-      try {
-        reader.close();
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-      try {
-        fr.close();
-      } catch (IOException e1) {
-        e1.printStackTrace();
-      }
-      
-      // Delete the original file and rename the temp file
-      original.delete();
-      temp.renameTo(original);
     }
     
     private boolean visitChildDelete(BTreeNode current, long key) {
 
       int childIndex = -1;
       boolean result = false;
-      boolean mergeChildren = false;
       
       // Find the right child to visit
       for (int i = 0; i < current.keys.length; i++) {
@@ -591,7 +541,6 @@ class BTree {
       // If not, then visit the child recursively
       BTreeNode child = current.children[childIndex];
       
-
       if (child != null && child.leaf) { // Child is a leaf
         result = deleteFromNode(child, key);
         
@@ -599,19 +548,75 @@ class BTree {
         if (!result) {
           return false;
         }
-        //check the child we just returned from
-        fixChildNodes(current, child, childIndex);
         
+        // Key was found - check if child has enough keys left
+        int minKeys = (((2 * t - 1) / 2) + 1);
+        if (child.n < minKeys) { // Child needs more keys
+          
+          // Try to redistribute from sibling
+          if (child.next != null && child.next.n > minKeys) { // Next leaf has available keys
+            
+            // Move first key/value in next to child
+            child.keys[child.n] = child.next.keys[0];
+            child.values[child.n] = child.next.values[0];
+            
+            // Remove key from next's keys array
+            for (int i = 0; i < child.next.keys.length - 1; i++) {
+              child.next.keys[i] = child.next.keys[i + 1];
+            }
+            // Clear the last index in the array
+            child.next.keys[child.next.keys.length - 1] = 0;
+            
+            // Replace key in parent with new 1st key in next
+            current.keys[childIndex - 1] = child.next.keys[0];
+            
+            // Remove value from next's keys array
+            for (int i = 0; i < child.next.values.length - 1; i++) {
+              child.next.values[i] = child.next.values[i + 1];
+            }
+            // Clear the last index in the array
+            child.next.values[child.next.values.length - 1] = 0;
+            
+            // Update the key counts
+            child.n++;
+            child.next.n--;
+            
+          } else { // Next leaf does not have available keys - need to merge child nodes
+            //TODO handle removing key from parent
+            
+            // Move keys from next -> child
+            int nextIndex = 0;
+            for (int i = child.n; i < child.keys.length; i++) {
+              child.keys[i] = child.next.keys[nextIndex];
+              nextIndex++;
+            }
+            
+            // Move values from next -> child
+            nextIndex = 0;
+            for (int i = child.n; i < child.values.length; i++) {
+              child.values[i] = child.next.values[nextIndex];
+              nextIndex++;
+            }
+            
+            // Update key count
+            child.n += child.next.n;
+            
+            // Update child's next pointer
+            if (child.next != null) {
+              child.next = child.next.next;
+            } else {
+              child.next = null;
+            }
+          }
+        }
       } else { // Child is not a leaf
         result = visitChildDelete(child, key);
         
-        	//no key was deleted, return false
-        	if (!result) {
-        		return false;
-        	}
+        if (!result) {
+          return false;
+        }
 
-        //check the child we just returned from
-        fixChildNodes(current, child, childIndex);
+        //TODO check if child nodes need to be merged
         
       }
       return result;
@@ -635,7 +640,7 @@ class BTree {
       
       // Key found - remove it from the array
       for (int k = index; k < node.keys.length; k++) {
-        if (node.keys[k] == node.keys.length) {
+        if (k == node.keys.length-1) {
           node.keys[k] = 0;
         } else {
           node.keys[k] = node.keys[k + 1];
@@ -652,7 +657,7 @@ class BTree {
       
       // Remove the same index from the values in the leaf
       for (int k = index; k < node.values.length; k++) {
-        if (node.values[k] == node.values.length) {
+        if (k == node.values.length-1) {
           node.values[k] = 0;
         } else {
           node.values[k] = node.values[k + 1];
@@ -662,97 +667,6 @@ class BTree {
       return true;
     }
 
-    /*
-     * This function finds the key in the parent node, replaces it with the correct value from the child node
-     * returns true if an index value was deleted and we know we have to rebalance
-     */
-    private boolean fixChildNodes(BTreeNode current, BTreeNode child, int childIndex) {
-    	// Key was found - check if child has enough keys left
-        int minKeys = (((2 * t - 1) / 2) + 1);
-        if (child.n < minKeys) { // Child needs more keys
-          BTreeNode sibling = current.children[childIndex + 1];
-        	
-          // Try to redistribute from sibling
-          if (sibling != null && sibling.n > minKeys) { // Next leaf has available keys
-            
-            // Move first key/value in next to child
-            child.keys[child.n] = sibling.keys[0];
-            if (child.leaf) {
-            	child.values[child.n] = sibling.values[0];
-            }
-            // Remove key from next's keys array
-            for (int i = 0; i < sibling.keys.length - 1; i++) {
-              sibling.keys[i] = sibling.keys[i + 1];
-            }
-            // Clear the last index in the array
-            sibling.keys[sibling.keys.length - 1] = 0;
-            
-            // Replace key in parent with new 1st key in next
-            current.keys[childIndex - 1] = sibling.keys[0];
-            
-            // Remove value from next's keys array
-            if (child.leaf) {
-            	for (int i = 0; i < sibling.values.length - 1; i++) {
-            		sibling.values[i] = sibling.values[i + 1];
-            	}
-            	// Clear the last index in the array
-                sibling.values[sibling.values.length - 1] = 0;
-            }
-
-            // Update the key counts
-            child.n++;
-            sibling.n--;
-            
-          } else { // Next leaf does not have available keys - need to merge child nodes
-            
-        	//add parent key to child array before merging
-        	child.keys[child.n] = current.keys[childIndex];
-        	current.keys[childIndex] = 0;
-        	child.n++;
-        	
-            // Move keys from next -> child
-            int nextIndex = 0;
-            for (int i = child.n; i < child.keys.length; i++) {
-              child.keys[i] = child.next.keys[nextIndex];
-              nextIndex++;
-            }
-            
-            // Move values from next -> child
-            if (child.leaf) {
-            	nextIndex = 0;
-            	for (int i = child.n; i < child.values.length; i++) {
-            		child.values[i] = child.next.values[nextIndex];
-            		nextIndex++;
-            	}
-            }
-            
-            // Update key count
-            child.n += sibling.n;
-            
-            // Update child's next pointer
-            if (child.next != null && child.leaf) {
-              child.next = child.next.next;
-            } else if (child.leaf){
-              child.next = null;
-            }
-            
-         	//Move all keys in parent node to the left from child index
-            for (int i = childIndex; i < current.keys.length; i++) {
-            	current.keys[i] = current.keys[i + 1];
-            }
-            current.keys[current.keys.length-1] = 0;
-         	
-            //Move all children over one value from child index
-            for (int i = childIndex + 1; i < current.children.length; i++) {
-            	current.children[i] = current.children[i + 1];
-            }
-            current.children[current.children.length - 1] = null; 
-          }  
-        }
-    	return false;
-    }
-    
-    
     List<Long> print() {
 
         List<Long> listOfRecordID = new ArrayList<>();

@@ -1,6 +1,6 @@
 3
-insert 320874982 Jack Ryan Law FR 18 24
+insert 320874982 Jack Ryan Law FR 18
 delete 115987938
 search 320874982
 search 455798411
-insert 321114982 Michael Scott Management RR 21 25
+insert 321114982 Michael Scott Management RR 21

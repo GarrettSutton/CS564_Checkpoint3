@@ -3,7 +3,6 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import java.util.UUID;
 
 /**
  * Main Application.
@@ -32,6 +31,7 @@ public class BTreeMain {
         for (Student s : studentsDB) {
             bTree.insert(s);
         }
+        
         long size = (long) studentsDB.size();
         /** Start reading the operations now from input file*/
         try {
@@ -41,7 +41,7 @@ public class BTreeMain {
                 while (s2.hasNext()) {
 
                     String operation = s2.next();
-
+                    //System.out.println(operation);
                     switch (operation) {
                         case "insert": {
 
@@ -51,6 +51,7 @@ public class BTreeMain {
                             String level = s2.next();
                             int age = Integer.parseInt(s2.next());
                             /** TODO: Write a logic to generate recordID*/
+
                             long recordID = ++size;
 
                             Student s = new Student(studentId, age, studentName, major, level, recordID);
@@ -81,6 +82,7 @@ public class BTreeMain {
                             List<Long> listOfRecordID = new ArrayList<>();
                             listOfRecordID = bTree.print();
                             System.out.println("List of recordIDs in B+Tree " + listOfRecordID.toString());
+                            break;
                         }
                         default:
                             System.out.println("Wrong Operation");
@@ -117,7 +119,7 @@ public class BTreeMain {
         	studentList.add(newStudent);
 		}
         
-        
+        readStudents.close();
         return studentList;
     }
 }

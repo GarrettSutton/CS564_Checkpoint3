@@ -399,9 +399,6 @@ class BTree {
       // New (right) child
       int newKeysIndex = 0;
       for (int k = mid; k < keyArray.length; k++) {
-    	if (newKeysIndex > rightKeys.length - 1) {
-    	  System.out.print(Arrays.toString(nodeToSplit.keys));
-    	}
     	rightKeys[newKeysIndex] = keyArray[k];
         rightVals[newKeysIndex++] = valArray[k];
         

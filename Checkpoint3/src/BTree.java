@@ -412,7 +412,7 @@ class BTree {
       // New (right) child
       int newKeysIndex = 0;
       for (int k = mid; k < keyArray.length; k++) {
-        rightKeys[newKeysIndex] = keyArray[k];
+    	  rightKeys[newKeysIndex] = keyArray[k];
         rightVals[newKeysIndex++] = valArray[k];
         
       }

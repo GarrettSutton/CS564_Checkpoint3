@@ -173,12 +173,13 @@ class BTree {
     	// read csv to check for duplicates
     	List<Long> studentList = new ArrayList<>();
         Scanner readStudents=null;
+        
         try {
 			readStudents = new Scanner(new File("src/Student.csv"));
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			System.out.println("Student file not found.");
+			System.out.println("Student file not found here.");
 		}
         
 		while(readStudents.hasNextLine()) {
@@ -193,7 +194,7 @@ class BTree {
 		try {
 			studentFile = new FileWriter("src/Student.csv",true);
 		} catch (IOException e) {
-			System.out.println("Student file not found.");
+			System.out.println("Student file not found or here.");
 		}
 		
 		if(!studentList.contains(student.studentId)) {

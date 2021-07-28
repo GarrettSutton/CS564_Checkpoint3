@@ -167,6 +167,9 @@ class BTree {
     	  }
     	}
     	
+    	
+    	// Sync the Student.csv with the BTree
+    	
     	// read csv to check for duplicates
     	List<Long> studentList = new ArrayList<>();
         Scanner readStudents=null;
@@ -213,8 +216,8 @@ class BTree {
      * If the child is a leaf, it will handle inserting the key/value and splitting if needed
      * If the child is not a leaf, it will call itself recursively
      * 
-     * @param current
-     * @param student
+     * @param current - BTreeNode to start with and find it's child
+     * @param student - student being inserted to the BTree
      */
     private void visitChild(BTreeNode current, Student student) {
       
@@ -254,14 +257,19 @@ class BTree {
         if (child.keys.length > (2 * t - 1)) {
           split(child, current, student, false, childIndex + 1);
         }
-        
       }
       
     }
     
     
-    // Index parameter should be the index in the parent's children array where the new node
-    // should be inserted
+    /**
+     * Split the child node if it is too large
+     * @param child -- child BTreeNode
+     * @param parent -- parent BTreeNode to the child
+     * @param student -- student to be inserted to the child
+     * @param isLeaf -- is the childNode a leaf?
+     * @param index -- index in the parent's children array where the new student is being inserted
+     */
     private void split(BTreeNode child, BTreeNode parent, Student student, Boolean isLeaf, int index) {
 
       // Create the new node
@@ -270,13 +278,23 @@ class BTree {
       // Call the right method based on leaf status
       if (isLeaf) {
         splitLeaf(child, parent, student, newNode, index);
+        System.out.println("split leaf");
       } else {
         splitNonLeaf(child, parent, newNode, index);
+        System.out.println("split non leaf");
       }
-
+      
       return;
     }
-      
+    
+    /**
+     * Add to and split the a leaf node and update the parent
+     * @param child -- leaf node
+     * @param parent -- parent to the leaf
+     * @param student -- student to add to the BTree
+     * @param newNode -- node to hold the over-fill from the child
+     * @param index -- index in the parent's children array where the new node is
+     */
     private void splitLeaf(BTreeNode child, BTreeNode parent, Student student, BTreeNode newNode, int index) {
 
       // Add the key-value pair to the child node 
@@ -413,6 +431,13 @@ class BTree {
       return;
     }
     
+    /**
+     * Split an internal (non-leaf) node in the tree
+     * @param child -- internal node to be split
+     * @param parent -- parent of the internal node that is being split
+     * @param newNode -- new node that gets overfill from the child
+     * @param index -- location in the parent's children array where newNode is placed
+     */
     private void splitNonLeaf(BTreeNode child, BTreeNode parent, BTreeNode newNode, int index) {
     	//TODO split keys
     	long midKey = child.keys[child.keys.length/2];
@@ -429,7 +454,9 @@ class BTree {
     		rightKeys[counter++]=child.keys[i];
     	}
     	child.keys = leftKeys;
+    	child.n = (int) midIndex;
     	newNode.keys = rightKeys;
+    	newNode.n = (int) (child.keys.length-midIndex);
     	
       //TODO split children
     	int midChild = child.children.length/2;
@@ -447,12 +474,10 @@ class BTree {
     	child.children=leftChildren;
     	newNode.children=rightChildren;
     	
-    	boolean changedSize = false;
     	if(index == parent.children.length) {
     		int newSize = parent.children.length;
     		parent.keys = Arrays.copyOf(parent.keys, newSize);
     		parent.children = Arrays.copyOf(parent.children,newSize+1);   
-    		changedSize = true;
     	}
     	
     	parent.children[index-1]=child;
@@ -460,7 +485,7 @@ class BTree {
       
       //TODO push up middle key - expand parent's keys array and add new key in the right spot
     	parent.keys[index-1] = midKey;
-    	
+    	parent.n++;
     	
       return;
     }

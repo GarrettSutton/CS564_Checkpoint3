@@ -399,7 +399,10 @@ class BTree {
       // New (right) child
       int newKeysIndex = 0;
       for (int k = mid; k < keyArray.length; k++) {
-        rightKeys[newKeysIndex] = keyArray[k];
+    	if (newKeysIndex > rightKeys.length - 1) {
+    	  System.out.print(Arrays.toString(nodeToSplit.keys));
+    	}
+    	rightKeys[newKeysIndex] = keyArray[k];
         rightVals[newKeysIndex++] = valArray[k];
         
       }
@@ -488,6 +491,13 @@ class BTree {
         result = deleteFromNode(root, studentId);
       } else { // Root is not a leaf - find the right node to delete from
         result = visitChildDelete(root, studentId);
+        if (!result) {
+        	return result;
+        }
+        //deleted key from root, making child new root after merging
+        if (root.n == 0) {
+        	root = root.children[0];
+        }
       }
       
       // TODO
@@ -584,6 +594,7 @@ class BTree {
       // If not, then visit the child recursively
       BTreeNode child = current.children[childIndex];
       
+
       if (child != null && child.leaf) { // Child is a leaf
         result = deleteFromNode(child, key);
         
@@ -591,77 +602,20 @@ class BTree {
         if (!result) {
           return false;
         }
+        //check the child we just returned from
+        fixChildNodes(current, child, childIndex);
         
-        // Key was found - check if child has enough keys left
-        int minKeys = (((2 * t - 1) / 2) + 1);
-        if (child.n < minKeys) { // Child needs more keys
-          
-          // Try to redistribute from sibling
-          if (child.next != null && child.next.n > minKeys) { // Next leaf has available keys
-            
-            // Move first key/value in next to child
-            child.keys[child.n] = child.next.keys[0];
-            child.values[child.n] = child.next.values[0];
-            
-            // Remove key from next's keys array
-            for (int i = 0; i < child.next.keys.length - 1; i++) {
-              child.next.keys[i] = child.next.keys[i + 1];
-            }
-            // Clear the last index in the array
-            child.next.keys[child.next.keys.length - 1] = 0;
-            
-            // Replace key in parent with new 1st key in next
-            current.keys[childIndex - 1] = child.next.keys[0];
-            
-            // Remove value from next's keys array
-            for (int i = 0; i < child.next.values.length - 1; i++) {
-              child.next.values[i] = child.next.values[i + 1];
-            }
-            // Clear the last index in the array
-            child.next.values[child.next.values.length - 1] = 0;
-            
-            // Update the key counts
-            child.n++;
-            child.next.n--;
-            
-          } else { // Next leaf does not have available keys - need to merge child nodes
-                  		      	  
-            // Move keys from next -> child
-            int nextIndex = 0;
-            for (int i = child.n; i < child.keys.length; i++) {
-              child.keys[i] = child.next.keys[nextIndex];
-              nextIndex++;
-            }
-            
-            // Move values from next -> child
-            nextIndex = 0;
-            for (int i = child.n; i < child.values.length; i++) {
-              child.values[i] = child.next.values[nextIndex];
-              nextIndex++;
-            }
-            
-            // Update key count
-            child.n += child.next.n;
-            
-            // Update child's next pointer
-            if (child.next != null) {
-              child.next = child.next.next;
-            } else {
-              child.next = null;
-            }
-            
-         	//starts with root, searches for key again, deletes if found in index node.
-         	mergeChildren = deleteFromParent(root, key);
-         	  
-          }
-        }
       } else { // Child is not a leaf
         result = visitChildDelete(child, key);
         
-        if (!result) {
-          return false;
-        }
+        	//no key was deleted, return false
+        	if (!result) {
+        		return false;
+        	}
 
+        //check the child we just returned from
+        fixChildNodes(current, child, childIndex);
+        
       }
       return result;
     }
@@ -715,60 +669,92 @@ class BTree {
      * This function finds the key in the parent node, replaces it with the correct value from the child node
      * returns true if an index value was deleted and we know we have to rebalance
      */
-    private boolean deleteFromParent(BTreeNode node, long key) {
-    	boolean doneSearching = false;
-    	int childIndex = -1;
-    	int keyIndex = -1;
-    	BTreeNode current = node;
-    	int minKeys = (((2 * t - 1) / 2) + 1);
-    	boolean needMerge = false;
-    	
-        // Check to see if key is in the node, if not find the next child to visit
-    	while (!doneSearching && !current.leaf) {//continue until we find the parent and delete or until we get to leaf
-    		for (int i = 0; i < current.keys.length; i++) {
-    			if (current.keys[i] == key) {//we found the key we deleted in the child node in a parent node
-    				keyIndex = i;	
-    				doneSearching = true;
-    				break;  //stop looping once we find the key in a parent node				
-    			}
-    			else if ((key < current.keys[i]) && !current.leaf) { //we didn't find the key, go to next child in search of key
-    				childIndex = i;
-    				current = current.children[childIndex];
-    			}
-    			else { //key is not in and index node, return
-    				return false;
-    			}
-    		}
-    	}
-    	
-    	//we know current is the parent with the key, and keyIndex is the location of the key. 
-    	//Get correct child index
-        for (int i = 0; i < current.keys.length; i++) {
-          if ((key < current.keys[i]) || (current.keys[i] == 0)) {
-            childIndex = i;
-            break; // Stop looping once we found the right child
-          }
-        }
-		//check preceding child. If size is greater than minimum, take predecessor and replace parent with it
-        if (current.children[childIndex - 1].keys.length > minKeys) {
-        	int predecessorIndex = current.children[childIndex-1].keys.length;
-        	current.keys[keyIndex] = current.children[childIndex - 1].keys[predecessorIndex];
-         }
-        //if size of preceding child is not greater than min, check successor child, replace parent with successor key
-        else if (current.children[childIndex + 1].keys.length > minKeys) {
-        	int successorIndex = 0; //successor should be first value in array
-        	current.keys[keyIndex] = current.children[childIndex - 1].keys[successorIndex];
-        }
-        //both predecessor and successor children have min number of keys (will need to merge both children, rearrange array
-        else {
-        	needMerge = true;
-        	for (int i = keyIndex; i < current.keys.length - 1; i++) { //rearranges the parent array after removing key
-        		current.keys[i] = current.keys[i + 1];
-        	}
-        }
+    private boolean fixChildNodes(BTreeNode current, BTreeNode child, int childIndex) {
+    	// Key was found - check if child has enough keys left
+        int minKeys = (((2 * t - 1) / 2) + 1);
+        if (child.n < minKeys) { // Child needs more keys
+          BTreeNode sibling = current.children[childIndex + 1];
+        	
+          // Try to redistribute from sibling
+          if (sibling != null && sibling.n > minKeys) { // Next leaf has available keys
+            
+            // Move first key/value in next to child
+            child.keys[child.n] = sibling.keys[0];
+            if (child.leaf) {
+            	child.values[child.n] = sibling.values[0];
+            }
+            // Remove key from next's keys array
+            for (int i = 0; i < sibling.keys.length - 1; i++) {
+              sibling.keys[i] = sibling.keys[i + 1];
+            }
+            // Clear the last index in the array
+            sibling.keys[sibling.keys.length - 1] = 0;
+            
+            // Replace key in parent with new 1st key in next
+            current.keys[childIndex - 1] = sibling.keys[0];
+            
+            // Remove value from next's keys array
+            if (child.leaf) {
+            	for (int i = 0; i < sibling.values.length - 1; i++) {
+            		sibling.values[i] = sibling.values[i + 1];
+            	}
+            	// Clear the last index in the array
+                sibling.values[sibling.values.length - 1] = 0;
+            }
 
-    	return needMerge;
+            // Update the key counts
+            child.n++;
+            sibling.n--;
+            
+          } else { // Next leaf does not have available keys - need to merge child nodes
+            
+        	//add parent key to child array before merging
+        	child.keys[child.n] = current.keys[childIndex];
+        	current.keys[childIndex] = 0;
+        	child.n++;
+        	
+            // Move keys from next -> child
+            int nextIndex = 0;
+            for (int i = child.n; i < child.keys.length; i++) {
+              child.keys[i] = child.next.keys[nextIndex];
+              nextIndex++;
+            }
+            
+            // Move values from next -> child
+            if (child.leaf) {
+            	nextIndex = 0;
+            	for (int i = child.n; i < child.values.length; i++) {
+            		child.values[i] = child.next.values[nextIndex];
+            		nextIndex++;
+            	}
+            }
+            
+            // Update key count
+            child.n += sibling.n;
+            
+            // Update child's next pointer
+            if (child.next != null && child.leaf) {
+              child.next = child.next.next;
+            } else if (child.leaf){
+              child.next = null;
+            }
+            
+         	//Move all keys in parent node to the left from child index
+            for (int i = childIndex; i < current.keys.length; i++) {
+            	current.keys[i] = current.keys[i + 1];
+            }
+            current.keys[current.keys.length-1] = 0;
+         	
+            //Move all children over one value from child index
+            for (int i = childIndex + 1; i < current.children.length; i++) {
+            	current.children[i] = current.children[i + 1];
+            }
+            current.children[current.children.length - 1] = null; 
+          }  
+        }
+    	return false;
     }
+    
     
     List<Long> print() {
 
